@@ -14,7 +14,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 logging.basicConfig(level=logging.INFO)
 
-BOT_TOKEN   = os.getenv("BOT_TOKEN", "8955023620:AAFoQ4MXOEZry7wycq5RH2rV2zVVKj1nTLk")
 OWNER_ID    = 8418787162         # ← ВСТАВЬТЕ ВАШ TELEGRAM ID
 
 ADMINS_FILE = "admins.json"
