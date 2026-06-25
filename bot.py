@@ -14,8 +14,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 logging.basicConfig(level=logging.INFO)
 
-BOT_TOKEN   = os.getenv("BOT_TOKEN", "7919778245:AAGLl9Zu9iWQXebGj_kS1ZA1tnTHVsxPIuk")
-OWNER_ID    = 8418787162          # ← ВСТАВЬТЕ ВАШ TELEGRAM ID
+OWNER_ID    = 8418787162         # ← ВСТАВЬТЕ ВАШ TELEGRAM ID
 
 ADMINS_FILE = "admins.json"
 STATS_FILE  = "stats.json"
@@ -23,15 +22,13 @@ STATUS_FILE = "bot_status.json"
 
 WELCOME_STICKER = "CAACAgUAAxkBAzO9_GorAYlsF8_CBld2lHD6eAbFv2YTAAJdEQACr3tRVZEquUWHNk4oPAQ"
 QR_IMAGE_PATH   = "qr.png"
-CARD_NUMBER     = "4100119552862877"   # ← ваша карта
-
-
+CARD_NUMBER     = "0000 0000 0000 0000"   # ← ваша карта
 
 # ── ID кастомных эмодзи для кнопок (Bot API 9.4+) ─────────────────────────
 # Замените каждый ID на свой (получить у @getidsbot или @emoji_id_bot)
 EMO_STARS   = "5954188131098956866"   # ⭐️ Звёзды
 EMO_PREMIUM = "5260725503215543617"   # 💎 Премиум звезда
-#EMO_SELF    = "5368324170671202286"   # 👤 Себе
+EMO_SELF    = "5368324170671202286"   # 👤 Себе
 EMO_GIFT    = "5425109608328891010"   # 🎁 Подарок
 EMO_BACK    = "5456187398977247949"   # ◀️ Назад
 EMO_QR      = "5422814644093868925"   # 📷 QR-Code
@@ -43,6 +40,12 @@ EMO_ADDADM  = "5368324170671202286"   # ➕ Добавить админа
 EMO_STOP    = "5368324170671202286"   # 🔴 Выключить
 EMO_START   = "5368324170671202286"   # 🟢 Включить
 EMO_PENCIL  = "5935938364086685805"   # ✏️ Выбрать количество
+EMO_3MON    = "5368324170671202286"   # 🗓 3 месяца
+EMO_6MON    = "5368324170671202286"   # 🗓 6 месяцев
+EMO_12MON   = "5368324170671202286"   # 🗓 12 месяцев
+EMO_SBP     = "5368324170671202286"   # 💸 СБП
+EMO_CALENDAR= "5368324170671202286"   # 🗓 Длительность
+EMO_MONEY   = "5368324170671202286"   # 💰 Стоимость
 
 # ──────────────────────────── хранилище ───────────────────────────────────
 
@@ -100,9 +103,10 @@ def add_purchase(buyer_id, buyer_uname, recipient, stars, amount, method):
 # ──────────────────────────── состояния ───────────────────────────────────
 
 class St(StatesGroup):
-    waiting_recipient = State()
-    waiting_stars     = State()
-    waiting_add_admin = State()
+    waiting_recipient         = State()
+    waiting_stars             = State()
+    waiting_add_admin         = State()
+    waiting_premium_recipient = State()
 
 # ──────────────────────────── клавиатуры ──────────────────────────────────
 
@@ -114,8 +118,8 @@ def btn(text, cb, emo=None):
 
 def kb_main(uid: int):
     rows = [
-        [btn(" Звёзды",          "stars",   EMO_STARS)],
-        [btn(" Telegram Premium", "premium", EMO_PREMIUM)],
+        [btn("⭐️ Звёзды",          "stars",   EMO_STARS)],
+        [btn("💎 Telegram Premium", "premium", EMO_PREMIUM)],
     ]
     if is_admin(uid):
         rows.append([btn("🛠 Админ-панель", "admin_panel", EMO_ADMIN)])
@@ -123,33 +127,32 @@ def kb_main(uid: int):
 
 def kb_stars_for():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [btn(" Себе",    "stars_self", EMO_STARS),
-         btn(" Подарить","stars_gift", EMO_GIFT)],
-        [btn(" Назад",   "back_main",  EMO_BACK)],
+        [btn("👤 Себе",    "stars_self", EMO_SELF),
+         btn("🎁 Подарить","stars_gift", EMO_GIFT)],
+        [btn("◀️ Назад",   "back_main",  EMO_BACK)],
     ])
 
 def kb_no_username():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [btn(" Назад", "back_stars", EMO_BACK)],
+        [btn("◀️ Назад", "back_stars", EMO_BACK)],
     ])
 
 def kb_amounts():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [btn("50 ",  "amount_50",  EMO_STARS),
-         btn("150 ", "amount_150", EMO_STARS),
-         btn("250 ", "amount_250", EMO_STARS)],
-        [btn("350 ", "amount_350", EMO_STARS),
-         btn("500 ", "amount_500", EMO_STARS),
-         btn("1000 ","amount_1000",EMO_STARS)],
-        [btn(" Выбрать количество звёзд", "amount_custom", EMO_PENCIL)],
-        [btn(" Назад", "back_stars", EMO_BACK)],
+        [btn("50 ⭐️",  "amount_50",  EMO_STARS),
+         btn("150 ⭐️", "amount_150", EMO_STARS),
+         btn("250 ⭐️", "amount_250", EMO_STARS)],
+        [btn("350 ⭐️", "amount_350", EMO_STARS),
+         btn("500 ⭐️", "amount_500", EMO_STARS),
+         btn("1000 ⭐️","amount_1000",EMO_STARS)],
+        [btn("✏️ Выбрать количество звёзд", "amount_custom", EMO_PENCIL)],
+        [btn("◀️ Назад", "back_stars", EMO_BACK)],
     ])
 
 def kb_payment():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [btn(" QR-Code",  "pay_qr",   EMO_QR),
-         btn(" По карте", "pay_card",  EMO_CARD)],
-        [btn(" Назад", "back_amounts", EMO_BACK)],
+        [btn("💸 СБП — жду подтверждения от lava.ru", "stars_sbp", EMO_SBP)],
+        [btn("◀️ Назад", "back_amounts", EMO_BACK)],
     ])
 
 def kb_to_start():
@@ -190,6 +193,27 @@ def kb_stat_user_back():
         [btn("◀️ К списку", "admin_stats", EMO_BACK)],
     ])
 
+def kb_premium_for():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [btn("👤 Себе",     "premium_self", EMO_SELF),
+         btn("🎁 Подарить", "premium_gift", EMO_GIFT)],
+        [btn("◀️ Назад",    "back_main",    EMO_BACK)],
+    ])
+
+def kb_premium_duration():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [btn("🗓 3 месяца — 1249₽",   "prem_dur_3",  EMO_3MON)],
+        [btn("🗓 6 месяцев — 1549₽",  "prem_dur_6",  EMO_6MON)],
+        [btn("🗓 12 месяцев — 2799₽", "prem_dur_12", EMO_12MON)],
+        [btn("◀️ Назад", "back_premium_for", EMO_BACK)],
+    ])
+
+def kb_premium_pay():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [btn("💸 СБП - жду подтверждения lava.ru", "premium_sbp", EMO_SBP)],
+        [btn("◀️ Назад", "back_premium_duration", EMO_BACK)],
+    ])
+
 # ──────────────────────────── helpers ─────────────────────────────────────
 
 async def del_msg(bot: Bot, chat_id: int, msg_id):
@@ -212,7 +236,7 @@ async def check_username_exists(username: str) -> bool:
     return await asyncio.get_event_loop().run_in_executor(None, _check)
 
 def calc_price(stars: int) -> float:
-    return stars * 1.575
+    return stars * 1.525
 
 MAINTENANCE_MSG = "🔧 Бот на тех. работах, как только он включится, мы вам сообщим"
 
@@ -234,7 +258,7 @@ async def cmd_start(message: Message, state: FSMContext, bot: Bot):
         pass
 
     sent = await message.answer(
-        "Добро пожаловать!\n\nStorigy — бот для покупки\nTelegram Stars и Premium",
+        "✨ Добро пожаловать!\n\nВыберите раздел:",
         reply_markup=kb_main(uid),
         parse_mode="HTML"
     )
@@ -271,19 +295,89 @@ async def handle_callback(call: CallbackQuery, state: FSMContext, bot: Bot):
     # ── Главное меню ──────────────────────────────────────────────────────
     if data == "back_main":
         await state.set_state(None)
-        await replace(" Выберите раздел:", kb_main(uid))
+        await replace("✨ Выберите раздел:", kb_main(uid))
 
     elif data == "premium":
-        await replace(" <b>Telegram Premium</b>\n\nРаздел в разработке.", kb_main(uid))
+        await replace(
+            "<tg-emoji emoji-id='" + EMO_PREMIUM + "'>💎</tg-emoji> <b>Telegram Premium</b>\n\nВыберите тип покупки:",
+            kb_premium_for()
+        )
+
+    elif data == "back_premium_for":
+        await state.set_state(None)
+        await state.update_data(premium_recipient=None)
+        await replace(
+            "<tg-emoji emoji-id='" + EMO_PREMIUM + "'>💎</tg-emoji> <b>Telegram Premium</b>\n\nВыберите тип покупки:",
+            kb_premium_for()
+        )
+
+    elif data == "premium_self":
+        uname = call.from_user.username
+        if not uname:
+            await replace(
+                "❗️У вас не установлен @username.\n\n"
+                "‼️Вам нужно перейти в «Настройки» — «Мой аккаунт» — «Имя пользователя». "
+                "Далее установите желаемый @username и повторите попытку.",
+                kb_no_username()
+            )
+            return
+        await state.update_data(premium_recipient=uname)
+        await replace(
+            f"<tg-emoji emoji-id='{EMO_PREMIUM}'>💎</tg-emoji> Premium подарок для @{uname}\n\n"
+            f"<tg-emoji emoji-id='{EMO_CALENDAR}'>🗓</tg-emoji> Выберите длительность подписки:",
+            kb_premium_duration()
+        )
+
+    elif data == "premium_gift":
+        await del_msg(bot, chat, last)
+        sent = await bot.send_message(
+            chat,
+            f"<tg-emoji emoji-id='{EMO_GIFT}'>🎁</tg-emoji> Введите @username получателя Premium:",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [btn("◀️ Назад", "back_premium_for", EMO_BACK)]
+            ]),
+            parse_mode="HTML"
+        )
+        await state.update_data(last_bot_msg=sent.message_id)
+        await state.set_state(St.waiting_premium_recipient)
+
+    elif data == "back_premium_duration":
+        rec = (await state.get_data()).get("premium_recipient", "")
+        await replace(
+            f"<tg-emoji emoji-id='{EMO_PREMIUM}'>💎</tg-emoji> Premium подарок для @{rec}\n\n"
+            f"<tg-emoji emoji-id='{EMO_CALENDAR}'>🗓</tg-emoji> Выберите длительность подписки:",
+            kb_premium_duration()
+        )
+
+    elif data in ("prem_dur_3", "prem_dur_6", "prem_dur_12"):
+        rec = sd.get("premium_recipient", "")
+        dur_map = {
+            "prem_dur_3":  ("3 месяца",  1249),
+            "prem_dur_6":  ("6 месяцев", 1549),
+            "prem_dur_12": ("1 год",     2799),
+        }
+        dur_label, price = dur_map[data]
+        await state.update_data(premium_duration=dur_label, premium_price=price)
+        await replace(
+            f"<tg-emoji emoji-id='{EMO_PREMIUM}'>⭐️</tg-emoji> Telegram Премиум\n"
+            f"<tg-emoji emoji-id='{EMO_GIFT}'>🎁</tg-emoji> Подарок для @{rec}\n"
+            f"<tg-emoji emoji-id='{EMO_CALENDAR}'>🗓</tg-emoji> Длительность: {dur_label}\n"
+            f"<tg-emoji emoji-id='{EMO_MONEY}'>💰</tg-emoji> Стоимость: {price} ₽\n\n"
+            f"Выберите метод оплаты 👇",
+            kb_premium_pay()
+        )
+
+    elif data == "premium_sbp":
+        await call.answer("💸 СБП — раздел в разработке", show_alert=True)
 
     elif data == "stars":
-        await replace("️ <b>Telegram Звезды</b>\n\nВыберите тип покупки:", kb_stars_for())
+        await replace("⭐️ <b>Telegram Звезды</b>\n\nВыберите тип покупки:", kb_stars_for())
 
     # ── Звёзды ────────────────────────────────────────────────────────────
     elif data == "back_stars":
         await state.set_state(None)
         await state.update_data(recipient=None)
-        await replace(" <b>Telegram Звезды</b>\n\nВыберите тип покупки:", kb_stars_for())
+        await replace("⭐️ <b>Telegram Звезды</b>\n\nВыберите тип покупки:", kb_stars_for())
 
     elif data == "stars_self":
         uname = call.from_user.username
@@ -296,14 +390,14 @@ async def handle_callback(call: CallbackQuery, state: FSMContext, bot: Bot):
             )
             return
         await state.update_data(recipient=uname)
-        await replace(f" <b>Звёзды для @{uname}</b>\n\nВыберите количество:", kb_amounts())
+        await replace(f"⭐️ <b>Звёзды для @{uname}</b>\n\nВыберите количество:", kb_amounts())
 
     elif data == "stars_gift":
         await del_msg(bot, chat, last)
         sent = await bot.send_message(
             chat, "Введите @username получателя:",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [btn(" Назад", "back_stars", EMO_BACK)]
+                [btn("◀️ Назад", "back_stars", EMO_BACK)]
             ])
         )
         await state.update_data(last_bot_msg=sent.message_id)
@@ -312,15 +406,15 @@ async def handle_callback(call: CallbackQuery, state: FSMContext, bot: Bot):
     # ── Количество ────────────────────────────────────────────────────────
     elif data == "back_amounts":
         rec = sd.get("recipient", "")
-        await replace(f" <b>Звёзды для @{rec}</b>\n\nВыберите количество:", kb_amounts())
+        await replace(f"⭐️ <b>Звёзды для @{rec}</b>\n\nВыберите количество:", kb_amounts())
 
     elif data.startswith("amount_") and data != "amount_custom":
         stars = int(data.split("_")[1])
         price = calc_price(stars)
         await state.update_data(stars=stars, price=price)
         await replace(
-            f" Выбранное количество: <b>{stars} Stars</b>\n\n"
-            f" Стоимость: <b>{price:,.2f} ₽</b>\n\n"
+            f"⭐️ Выбранное количество: <b>{stars} Stars</b>\n\n"
+            f"💰 Стоимость: <b>{price:,.2f} ₽</b>\n\n"
             f"Выберите метод оплаты 👇",
             kb_payment()
         )
@@ -339,38 +433,8 @@ async def handle_callback(call: CallbackQuery, state: FSMContext, bot: Bot):
         await state.set_state(St.waiting_stars)
 
     # ── Оплата ────────────────────────────────────────────────────────────
-    elif data in ("pay_qr", "pay_card"):
-        stars  = sd.get("stars", 0)
-        price  = sd.get("price", 0.0)
-        rec    = sd.get("recipient", "")
-        method = "QR-Code" if data == "pay_qr" else "По карте"
-        add_purchase(uid, call.from_user.username, rec, stars, price, method)
-
-        await del_msg(bot, chat, last)
-
-        if data == "pay_qr":
-            caption = (
-                #f"<tg-emoji emoji-id='{EMO_QR}'>📷</tg-emoji> Оплатите <b>{price:,.2f}₽</b> по QR-Code\n"
-                f"<tg-emoji emoji-id='{EMO_QR}'>📷</tg-emoji>Скоро добавим!"
-            )
-            if os.path.exists(QR_IMAGE_PATH):
-                sent = await bot.send_photo(
-                    chat, photo=FSInputFile(QR_IMAGE_PATH),
-                    caption=caption, reply_markup=kb_to_start(), parse_mode="HTML"
-                )
-            else:
-                sent = await bot.send_message(
-                    chat, caption, reply_markup=kb_to_start(), parse_mode="HTML"
-                )
-        else:
-            sent = await bot.send_message(
-                chat,
-                f"<tg-emoji emoji-id='{EMO_CARD}'>💳</tg-emoji> Оплатите <b>{price:,.2f}₽</b> по карте\n"
-                f"<code>{CARD_NUMBER}</code>\n"
-                f"В комментарии оставьте свой юзернейм\n(Номер копируется по нажатию)",
-                reply_markup=kb_to_start(), parse_mode="HTML"
-            )
-        await state.update_data(last_bot_msg=sent.message_id)
+    elif data == "stars_sbp":
+        await call.answer("💸 СБП — жду подтверждения от lava.ru", show_alert=True)
 
     # ── Админ-панель ──────────────────────────────────────────────────────
     elif data == "admin_panel":
@@ -458,7 +522,7 @@ async def fsm_recipient(message: Message, state: FSMContext, bot: Bot):
         sent = await message.answer(
             "❌ Пользователь не найден. Введите другой @username:",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [btn(" Назад", "back_stars", EMO_BACK)]
+                [btn("◀️ Назад", "back_stars", EMO_BACK)]
             ])
         )
         await state.update_data(last_bot_msg=sent.message_id)
@@ -468,7 +532,7 @@ async def fsm_recipient(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(recipient=username)
     await state.set_state(None)
     sent = await message.answer(
-        f"<tg-emoji emoji-id='{EMO_STARS}'>⭐️</tg-emoji> <b>Звёзды для @{username}</b>\n\nВыберите количество:",
+        f"⭐️ <b>Звёзды для @{username}</b>\n\nВыберите количество:",
         reply_markup=kb_amounts(), parse_mode="HTML"
     )
     await state.update_data(last_bot_msg=sent.message_id)
@@ -490,7 +554,7 @@ async def fsm_stars(message: Message, state: FSMContext, bot: Bot):
 
     text   = message.text.strip()
     back_kb = InlineKeyboardMarkup(inline_keyboard=[
-        [btn(" Назад", "back_amounts", EMO_BACK)]
+        [btn("◀️ Назад", "back_amounts", EMO_BACK)]
     ])
 
     if not text.lstrip("-").isdigit():
@@ -510,10 +574,48 @@ async def fsm_stars(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(stars=stars, price=price)
     await state.set_state(None)
     sent = await message.answer(
-        f"<tg-emoji emoji-id='{EMO_STARS}'>⭐️</tg-emoji> Выбранное количество: <b>{stars} Stars</b>\n\n"
-        f" Стоимость: <b>{price:,.2f} ₽</b>\n\n"
+        f"⭐️ Выбранное количество: <b>{stars} Stars</b>\n\n"
+        f"💰 Стоимость: <b>{price:,.2f} ₽</b>\n\n"
         f"Выберите метод оплаты 👇",
         reply_markup=kb_payment(), parse_mode="HTML"
+    )
+    await state.update_data(last_bot_msg=sent.message_id)
+
+
+async def fsm_premium_recipient(message: Message, state: FSMContext, bot: Bot):
+    uid = message.from_user.id
+    if not is_active() and not is_admin(uid):
+        await message.answer(MAINTENANCE_MSG)
+        return
+
+    sd = await state.get_data()
+    await del_msg(bot, message.chat.id, sd.get("last_bot_msg"))
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+    username = message.text.strip().lstrip("@")
+    exists   = await check_username_exists(username)
+
+    if not exists:
+        sent = await message.answer(
+            "❌ Пользователь не найден. Введите другой @username:",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [btn("◀️ Назад", "back_premium_for", EMO_BACK)]
+            ])
+        )
+        await state.update_data(last_bot_msg=sent.message_id)
+        await state.set_state(St.waiting_premium_recipient)
+        return
+
+    await state.update_data(premium_recipient=username)
+    await state.set_state(None)
+    sent = await message.answer(
+        f"<tg-emoji emoji-id='{EMO_PREMIUM}'>💎</tg-emoji> Premium подарок для @{username}\n\n"
+        f"<tg-emoji emoji-id='{EMO_CALENDAR}'>🗓</tg-emoji> Выберите длительность подписки:",
+        reply_markup=kb_premium_duration(),
+        parse_mode="HTML"
     )
     await state.update_data(last_bot_msg=sent.message_id)
 
@@ -562,7 +664,8 @@ async def main():
     dp.callback_query.register(handle_callback)
     dp.message.register(fsm_recipient,  St.waiting_recipient)
     dp.message.register(fsm_stars,      St.waiting_stars)
-    dp.message.register(fsm_add_admin,  St.waiting_add_admin)
+    dp.message.register(fsm_add_admin,           St.waiting_add_admin)
+    dp.message.register(fsm_premium_recipient,    St.waiting_premium_recipient)
 
     await dp.start_polling(bot)
 
