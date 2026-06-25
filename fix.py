@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot
 
-BOT_TOKEN = "8904034562:AAGs3I8oprdPkdzRq7_Fqcbku0lAkG5k6pg"
+BOT_TOKEN = "8955023620:AAFoQ4MXOEZry7wycq5RH2rV2zVVKj1nTLk"
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
